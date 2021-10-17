@@ -32,17 +32,9 @@ class UserEloquent
         $response = Route::dispatch($proxy);
         $statusCode = $response->getStatusCode();
         $response = json_decode($response->getContent());
-        if ($statusCode != 200) {
-            $data = [
-                'status' => false,
-                'statusCode' => $statusCode,
-                'message' => $response->message,
-                'items' => $response,
+        if ($statusCode != 200)
+            return response_api(false, $statusCode, $response->message, $response);
 
-            ];
-            return response()->json($data);
-
-        }
 
         $token = $response->access_token;
         \request()->headers->set('Authorization', 'Bearer ' . $token);
@@ -51,19 +43,10 @@ class UserEloquent
         $response = Route::dispatch($proxy);
 
         $statusCode = $response->getStatusCode();
-        $response = json_decode($response->getContent());
         $user = \auth()->user();
-        $data = [
-            'status' => true,
-            'statusCode' => $statusCode,
-            'message' => 'Successfully Login!',
-            'items' => [
-                'token' => $token,
-                'user' => $user,
-            ],
 
-        ];
-        return response()->json($data);
+        return response_api(true, $statusCode, 'Successfully Login', ['token' => $token, 'user' => $user]);
+
     }
 
     public function profile($id = null)
@@ -71,27 +54,14 @@ class UserEloquent
         if (isset($id)) {
             $user = User::find($id);
             if (!isset($user)) {
-                $data = [
-                    'status' => false,
-                    'statusCode' => 422,
-                    'message' => 'Error',
-                    'items' => new \stdClass(),
+                return response_api(false, 422, 'Error', new \stdClass());
 
-                ];
-
-                return response()->json($data);
             }
+
         }
         $user = isset($id) ? $user : \auth()->user();
-        $data = [
-            'status' => true,
-            'statusCode' => 200,
-            'message' => 'Success',
-            'items' => new profileResource($user)
+        return response_api(true, 200, 'Success', new profileResource($user));
 
-        ];
-
-        return response()->json($data);
 
     }
 
@@ -110,14 +80,8 @@ class UserEloquent
         $data['verifcation_code'] = $this->generateCode();
 
         $user = User::create($data);
-        $data = [
-            'status' => true,
-            'statusCode' => 200,
-            'message' => 'Successfully Register!',
-            'items' => $user->fresh(),
+        return response_api(true, 200, 'Successfully Register!', $user->fresh());
 
-        ];
-        return response()->json($data);
     }
 
     public function edit(array $data)
@@ -146,16 +110,8 @@ class UserEloquent
         }
         $user->bio = $data['bio'];
         $user->save();
-        $data = [
-            'status' => true,
-            'statusCode' => 200,
-            'message' => 'Successfully Updated!',
-            'items' => [
-                'profile' => new userResource($user),
-            ],
+        return response_api(true, 200, 'Successfully Updated!', ['profile' => new userResource($user)]);
 
-        ];
-        return response()->json($data);
     }
 
     public function addsocial(array $data)
@@ -166,25 +122,11 @@ class UserEloquent
             $social->type = $data['type'];
             $social->user_id = \auth()->user()->id;
             $social->save();
-            $data = [
-                'status' => true,
-                'statusCode' => 200,
-                'message' => 'Successfully Added!',
-                'items' => [
-                    'social' => new socialResource($social),
-                ],
+            return response_api(true, 200, 'Successfully Added!', ['social' => new socialResource($social)]);
 
-            ];
-            return response()->json($data);
         } else {
-            $data = [
-                'status' => false,
-                'statusCode' => 500,
-                'message' => 'Unauthorized to be here!',
-                'items' => '',
+            return response_api(false, 500, 'Unauthorized to be here!', '');
 
-            ];
-            return response()->json($data);
         }
     }
 
@@ -196,25 +138,12 @@ class UserEloquent
             $experience->bio = $data['bio'];
             $experience->user_id = \auth()->user()->id;
             $experience->save();
-            $data = [
-                'status' => true,
-                'statusCode' => 200,
-                'message' => 'Successfully Added!',
-                'items' => [
-                    'experience' => new experienceResource($experience),
-                ],
 
-            ];
-            return response()->json($data);
+            return response_api(true, 200, 'Successfully Added!', ['experience' => new experienceResource($experience),]);
+
         } else {
-            $data = [
-                'status' => false,
-                'statusCode' => 500,
-                'message' => 'Unauthorized to be here!',
-                'items' => '',
+            return response_api(false, 500, 'Unauthorized to be here!', '');
 
-            ];
-            return response()->json($data);
         }
     }
 
@@ -227,62 +156,31 @@ class UserEloquent
             $education->icon = $data['icon'];
             $education->user_id = \auth()->user()->id;
             $education->save();
-            $data = [
-                'status' => true,
-                'statusCode' => 200,
-                'message' => 'Successfully Added!',
-                'items' => [
-                    'education' => new educationResource($education),
-                ],
+            return response_api(true, 200, 'Successfully Added!', ['education' => new educationResource($education)]);
 
-            ];
-            return response()->json($data);
         } else {
-            $data = [
-                'status' => false,
-                'statusCode' => 500,
-                'message' => 'Unauthorized to be here!',
-                'items' => '',
+            return response_api(false, 500, 'Unauthorized to be here!', '');
 
-            ];
-            return response()->json($data);
         }
     }
-    public function verifcation_code(){
-        $data = [
-            'status' => true,
-            'statusCode' => 200,
-            'message' => 'Success!',
-            'items' => [
-                'verifcation_code' => Auth::user()->verifcation_code,
-            ],
 
-        ];
-        return response()->json($data);
+    public function verifcation_code()
+    {
+        return response_api(true, 200, 'Success!',['verifcation_code' => Auth::user()->verifcation_code]);
+
     }
-    public function verify(array $data){
-        if ($data['verifcation_code']== Auth::user()->verifcation_code){
-            $id = auth()->user()->id;
-            $user = User::find($id);
+
+    public function verify(array $data)
+    {
+        if ($data['verifcation_code'] == Auth::user()->verifcation_code) {
+            $user = auth()->user();
             $user->is_verify = true;
             $user->save();
-            $data = [
-                'status' => true,
-                'statusCode' => 200,
-                'message' => 'Phone Verified Successfully!',
-                'items' => '',
+            return response_api(true, 200, 'Phone Verified Successfully!','');
 
-            ];
-            return response()->json($data);
         }
-        $data = [
-            'status' => false,
-            'statusCode' => 500,
-            'message' => 'Bad Verifcation Code!',
-            'items' => '',
+        return response_api(false, 422, 'Bad Verifcation Code!', '');
 
-        ];
-        return response()->json($data);
     }
 
 

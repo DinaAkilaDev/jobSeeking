@@ -12,7 +12,9 @@ class IntroController extends Controller
     {
         $this->intro = $introEloquent;
     }
-    public function show(){
+
+    public function show()
+    {
         return $this->intro->show();
     }
 }

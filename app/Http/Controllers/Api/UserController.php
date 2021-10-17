@@ -51,9 +51,12 @@ class UserController extends Controller
     {
         return $this->user->addeducation($request->all());
     }
-    public function verifcation_code(){
+
+    public function verifcation_code()
+    {
         return $this->user->verifcation_code();
     }
+
     public function verify(verifcationCodeRequest $request)
     {
         return $this->user->verify($request->all());

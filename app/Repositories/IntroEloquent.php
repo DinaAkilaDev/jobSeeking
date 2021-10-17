@@ -19,6 +19,6 @@ class IntroEloquent
         $total_pages = ceil($total_records / $page_size);
         $intro = Intro::skip(($page_number - 1) * $page_size)
             ->take($page_size)->get();
-        return response_api_pagination(true,200,'Success',introResource::collection($intro), $page_number,$total_pages,$total_records);
+        return response_api(true,200,'Success',introResource::collection($intro), $page_number,$total_pages,$total_records);
     }
 }

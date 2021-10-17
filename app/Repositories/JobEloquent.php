@@ -41,7 +41,7 @@ class JobEloquent
         $total_pages = ceil($total_records / $page_size);
         $jobs = Job::skip(($page_number - 1) * $page_size)
             ->take($page_size)->get();
-        return response_api_pagination(true,200,'Success',userApplyResource::collection($jobs), $page_number,$total_pages,$total_records);
+        return response_api(true,200,'Success',userApplyResource::collection($jobs), $page_number,$total_pages,$total_records);
 
     }
 
